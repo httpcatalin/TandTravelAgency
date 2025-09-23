@@ -329,8 +329,8 @@ function SearchStaysForm({ params = {} }) {
               };
               if (Object.keys(selected).length > 0) {
                 d = {
-                  city: selected.city,
-                  country: selected.country,
+                  city: selected.city || "",
+                  country: selected.label,
                 };
                 dispatch(setStayForm({ destination: d }));
               }

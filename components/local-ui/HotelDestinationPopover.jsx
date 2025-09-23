@@ -25,8 +25,7 @@ export function HotelDestinationPopover({
 
     return (
       <div className={cn("rounded border p-2", className)}>
-        <div className={"text-2xl font-bold"}>{obj?.city || "City"}</div>
-        <div className={"text-sm"}>{obj?.country || "Country"}</div>
+        <div className={"text-2xl font-bold"}>{obj?.label || "Country"}</div>
       </div>
     );
   }
@@ -66,8 +65,7 @@ export function HotelDestinationPopover({
       >
         <Image width={24} height={24} src={locationIcon} alt="location_icon" />
         <div>
-          <div className={"text-md font-bold"}>{obj.city}</div>
-          <div className={"text-xs"}>{obj.country}</div>
+          <div className={"text-md font-bold"}>{obj.label}</div>
         </div>
       </div>
     ));

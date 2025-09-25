@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { DatePicker } from "@/components/local-ui/DatePicker";
 import { HotelDestinationPopover } from "@/components/local-ui/HotelDestinationPopover";
+import { PackageTemplatesPopover } from "@/components/local-ui/PackageTemplatesPopover";
 import {
   Popover,
   PopoverTrigger,
@@ -79,47 +80,75 @@ function SearchStaysForm({ params = {} }) {
   const [isSending, setIsSending] = useState(false);
   const [isRoomsGuestOpen, setIsRoomsGuestOpen] = useState(false);
   const stayFormData = useSelector((state) => state.stayForm.value);
-  const errors = stayFormData.errors;
+  let errors = stayFormData.errors || {};
+  const isPackageModeUI =
+    !stayFormData?.destination?.city &&
+    !!stayFormData?.countryId &&
+    !!stayFormData?.packageTemplate?.id;
+
+  if (isPackageModeUI && errors && Object.keys(errors).length) {
+    const { rooms, guests, checkIn, checkOut, city, country, ...rest } = errors;
+    errors = rest;
+  }
 
   const spStr = params?.hotelSearchParams;
   useEffect(() => {
     async function searchState() {
       setIsFormLoading(true);
+      let isPackageQuery = false;
+      if ("hotelSearchParams" in params) {
+        try {
+          const decoded = decodeURIComponent(params.hotelSearchParams || "");
+          const sp = new URLSearchParams(decoded);
+          isPackageQuery = sp.get("package_mode") === "1";
+        } catch (err) {
+          isPackageQuery = false;
+        }
+      }
+
+      if ("hotelSearchParams" in params && isPackageQuery) {
+        // In package mode, keep user's previous selections and, if available,
+        // hydrate them from a dedicated cookie so refreshes still show names (not IDs)
+        try {
+          const pkgCookieRaw = (
+            await getCookiesAction(["hotelPackageState"])
+          )?.[0]?.value;
+          if (pkgCookieRaw) {
+            const pkgState = JSON.parse(pkgCookieRaw || "{}");
+            const next = {};
+            if (pkgState?.country) {
+              next.destination = {
+                city: "",
+                country: pkgState.country,
+              };
+            }
+            if (pkgState?.countryId) next.countryId = pkgState.countryId;
+            if (pkgState?.packageTemplate)
+              next.packageTemplate = pkgState.packageTemplate;
+            if (Object.keys(next).length) {
+              dispatch(setStayForm(next));
+            }
+          }
+        } catch {}
+        setIsFormLoading(false);
+        return;
+      }
+
       const p = getSearchStateParams();
 
       if ("hotelSearchParams" in params) {
-        const newFormData = {
-          ...defaultHotelFormValue,
-          ...{
-            ...p,
-            destination: {
-              city: p.city,
-              country: p.country,
-            },
-          },
+        // Hydrate from URL params but do NOT reset previously selected country/package
+        const obj = {
           ...p,
+          destination: {
+            city: p.city,
+            country: p.country,
+          },
         };
+        delete obj.city;
+        delete obj.country;
 
-        if (Object.keys(newFormData?.errors || {}).length > 0) {
-          dispatch(setStayForm(newFormData));
-        } else {
-          const obj = {
-            ...p,
-            destination: {
-              city: p.city,
-              country: p.country,
-            },
-          };
-          delete obj.city;
-          delete obj.country;
-
-          dispatch(
-            setStayForm({
-              ...defaultHotelFormValue,
-              ...obj,
-            })
-          );
-        }
+        dispatch(setStayForm(obj));
         setIsFormLoading(false);
         return;
       }
@@ -132,7 +161,6 @@ function SearchStaysForm({ params = {} }) {
       if (Object.keys(searchState?.errors || {}).length > 0) {
         dispatch(
           setStayForm({
-            ...defaultHotelFormValue,
             ...{
               ...searchStateCookie,
               destination: {
@@ -154,12 +182,7 @@ function SearchStaysForm({ params = {} }) {
         delete obj.city;
         delete obj.country;
 
-        dispatch(
-          setStayForm({
-            ...defaultHotelFormValue,
-            ...obj,
-          })
-        );
+        dispatch(setStayForm(obj));
       }
       setIsFormLoading(false);
     }
@@ -181,6 +204,61 @@ function SearchStaysForm({ params = {} }) {
       rooms: stayFormData.rooms,
       guests: stayFormData.guests,
     };
+
+    const isPackageFlow =
+      !stayFormData?.destination?.city &&
+      !!stayFormData?.countryId &&
+      !!stayFormData?.packageTemplate?.id;
+
+    if (isPackageFlow) {
+      try {
+        const qsPayload = {
+          package_mode: "1", // flag to detect in results layer
+          // Use country name in the URL for UI
+          country: stayFormData?.destination?.country || "",
+          country_id: stayFormData.countryId,
+          package_template: stayFormData.packageTemplate.id,
+          guests: stayFormData.guests || 1,
+          // pass through dates in same format used by hotel form to avoid validation errors (will be ignored in package mode)
+          checkIn: stayFormData.checkIn
+            ? new Date(stayFormData.checkIn).getTime()
+            : "",
+          checkOut: stayFormData.checkOut
+            ? new Date(stayFormData.checkOut).getTime()
+            : "",
+        };
+
+        const qs = new URLSearchParams(
+          Object.entries(qsPayload)
+            .filter(([, v]) => v !== undefined && v !== null && v !== "")
+            .map(([k, v]) => [k, String(v)])
+        ).toString();
+
+        dispatch(setStayForm({ errors: {} }));
+        // store package state for persistence across reloads
+        await setCookiesAction([
+          {
+            name: "hotelPackageState",
+            value: JSON.stringify({
+              country: stayFormData?.destination?.country || "",
+              countryId: stayFormData?.countryId || "",
+              packageTemplate: stayFormData?.packageTemplate || null,
+              guests: stayFormData?.guests || 1,
+            }),
+            expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+          },
+        ]);
+        router.push(`/hotels/search/${encodeURIComponent(qs)}`, {
+          scroll: false,
+        });
+        setTimeout(() => jumpTo("hotelResults"), 400);
+        setIsSending(false);
+        return;
+      } catch (err) {
+        setIsSending(false);
+        return;
+      }
+    }
 
     let searchState = {};
     if ("hotelSearchParams" in params) {
@@ -282,7 +360,7 @@ function SearchStaysForm({ params = {} }) {
   return (
     <form id="stayForm" method={"get"} onSubmit={handleSubmit}>
       <div className={"col-span-full"}>
-        {Object.keys(errors).length > 0 && (
+        {Object.keys(errors).length > 0 && !isPackageModeUI && (
           <ErrorMessage
             message={
               <ol>
@@ -330,17 +408,88 @@ function SearchStaysForm({ params = {} }) {
               if (Object.keys(selected).length > 0) {
                 d = {
                   city: selected.city || "",
-                  country: selected.label,
+                  country: selected.country || selected.label || "",
                 };
-                dispatch(setStayForm({ destination: d }));
+                const next = {
+                  destination: d,
+                  countryId: selected.id || selected.country_id || "",
+                  // reset previously selected package if country changes
+                  packageTemplate: null,
+                };
+                dispatch(setStayForm(next));
+                // persist package-mode relevant state as well
+                setCookiesAction([
+                  {
+                    name: "hotelPackageState",
+                    value: JSON.stringify({
+                      country: d.country,
+                      countryId: next.countryId,
+                    }),
+                    expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+                  },
+                ]);
               }
             }}
           />
         </div>
+        {/* Packages selector */}
+        <div
+          className={cn(
+            "relative col-span-full flex h-auto min-h-[100px] flex-col gap-2 rounded-[8px] border-2 border-primary md:flex-row lg:col-span-1"
+          )}
+        >
+          <span className="absolute -top-[8px] left-[16px] z-10 inline-block bg-white px-[4px] leading-none">
+            Packages
+          </span>
+          {stayFormData.countryId ? (
+            <PackageTemplatesPopover
+              isLoading={isFormLoading}
+              className={"h-full w-full rounded-[8px] border-0 py-4 pl-4"}
+              fetchInputs={{
+                url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/hotels/countries/${encodeURIComponent(
+                  stayFormData.countryId
+                )}/package_templates`,
+                method: "GET",
+              }}
+              defaultSelected={
+                stayFormData.packageTemplate || { label: "Select package" }
+              }
+              getSelected={(selected) => {
+                if (selected && Object.keys(selected).length > 0) {
+                  const pkg = {
+                    id: selected.id || selected.package_template_id || "",
+                    label: selected.label || selected.name || "",
+                  };
+                  dispatch(setStayForm({ packageTemplate: pkg }));
+                  // persist for package mode refreshes
+                  setCookiesAction([
+                    {
+                      name: "hotelPackageState",
+                      value: JSON.stringify({
+                        country: stayFormData?.destination?.country || "",
+                        countryId: stayFormData?.countryId || "",
+                        packageTemplate: pkg,
+                      }),
+                      expires: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+                    },
+                  ]);
+                }
+              }}
+            />
+          ) : (
+            <div className={"h-full w-full rounded-[8px] border-0 py-4 pl-4"}>
+              <div className={"text-2xl font-bold text-muted-foreground"}>
+                Select a country first
+              </div>
+            </div>
+          )}
+        </div>
         <div
           className={cn(
             "relative col-span-full flex h-auto flex-col gap-2 rounded-[8px] border-2 border-primary md:flex-row lg:col-span-2",
-            (errors?.checkIn || errors?.checkOut) && "border-destructive"
+            !isPackageModeUI &&
+              (errors?.checkIn || errors?.checkOut) &&
+              "border-destructive"
           )}
         >
           <InputLabel
@@ -426,7 +575,9 @@ function SearchStaysForm({ params = {} }) {
         <div
           className={cn(
             "relative col-span-4 flex h-auto items-center gap-[4px] rounded-[8px] border-2 border-primary lg:col-span-1",
-            (errors?.rooms || errors?.guests) && "border-destructive"
+            !isPackageModeUI &&
+              (errors?.rooms || errors?.guests) &&
+              "border-destructive"
           )}
         >
           <InputLabel

@@ -5,6 +5,8 @@ export const defaultHotelFormValue = {
     city: "",
     country: "",
   },
+  countryId: "",
+  packageTemplate: null,
   checkIn: "",
   checkOut: "",
   rooms: 1,

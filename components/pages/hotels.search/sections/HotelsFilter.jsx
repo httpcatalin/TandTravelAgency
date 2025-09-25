@@ -61,7 +61,7 @@ export function HotelsFilter({
         features: filters?.features
           ? filters?.features.map((el) => "feature-" + el)
           : [],
-      }),
+      })
     );
   }, [filters, dispatch, defaultFilterDB?.priceRange]);
 
@@ -70,32 +70,39 @@ export function HotelsFilter({
       dispatch(
         setStayFilter({
           [groupName]: [...stayState?.filters[groupName], name],
-        }),
+        })
       );
     } else {
       dispatch(
         setStayFilter({
           [groupName]: stayState?.filters[groupName].filter(
-            (item) => item !== name,
+            (item) => item !== name
           ),
-        }),
+        })
       );
     }
   }
 
   function handleApplyFilters() {
-    const validateStayForm = validateHotelSearchParams({
-      city: stayState.destination.city,
-      country: stayState.destination.country,
-      checkIn: stayState.checkIn,
-      checkOut: stayState.checkOut,
-      rooms: stayState.rooms,
-      guests: stayState.guests,
-    });
-
-    if (validateStayForm.success === false) {
-      dispatch(setStayForm({ errors: validateStayForm.errors }));
-      return;
+    // In package mode, skip hotel-form validation because we drive from template
+    const isPackageMode = !!(
+      stayState?.countryId &&
+      stayState?.packageTemplate?.id &&
+      !stayState?.destination?.city
+    );
+    if (!isPackageMode) {
+      const validateStayForm = validateHotelSearchParams({
+        city: stayState.destination.city,
+        country: stayState.destination.country,
+        checkIn: stayState.checkIn,
+        checkOut: stayState.checkOut,
+        rooms: stayState.rooms,
+        guests: stayState.guests,
+      });
+      if (validateStayForm.success === false) {
+        dispatch(setStayForm({ errors: validateStayForm.errors }));
+        return;
+      }
     }
 
     const sp = new URLSearchParams(hotelSearchParams);
@@ -120,7 +127,7 @@ export function HotelsFilter({
     <section
       className={cn(
         "relative w-full border-none pr-[12px] lg:w-[400px] lg:border-r-[1px]",
-        className,
+        className
       )}
     >
       <div className="mb-[24px] flex items-center justify-between font-semibold text-secondary">
@@ -148,7 +155,7 @@ export function HotelsFilter({
       <div
         className={cn(
           "w-full rounded-lg max-lg:bg-white max-lg:p-5 max-lg:shadow-md",
-          filter === false && "max-lg:hidden",
+          filter === false && "max-lg:hidden"
         )}
       >
         <div className={"flex justify-end"}>
@@ -224,7 +231,7 @@ export function HotelsFilter({
               >
                 {featuresLimit < hotelDefaultFilterState?.features.length
                   ? `+${Math.abs(
-                      hotelDefaultFilterState?.features.length - featuresLimit,
+                      hotelDefaultFilterState?.features.length - featuresLimit
                     )} more`
                   : "Show less"}
               </Button>
@@ -258,7 +265,7 @@ export function HotelsFilter({
                     amenitiesLimit < hotelDefaultFilterState?.amenities.length
                   ) {
                     setAmenitiesLimit(
-                      hotelDefaultFilterState?.amenities.length,
+                      hotelDefaultFilterState?.amenities.length
                     );
                   } else {
                     setAmenitiesLimit(10);
@@ -267,8 +274,7 @@ export function HotelsFilter({
               >
                 {amenitiesLimit < hotelDefaultFilterState?.amenities.length
                   ? `+${Math.abs(
-                      hotelDefaultFilterState?.amenities.length -
-                        amenitiesLimit,
+                      hotelDefaultFilterState?.amenities.length - amenitiesLimit
                     )} more`
                   : "Show less"}
               </Button>
@@ -294,7 +300,7 @@ function Loading({ className }) {
     <section
       className={cn(
         "relative w-full border-none pr-[12px] lg:w-[400px] lg:border-r-[1px]",
-        className,
+        className
       )}
     >
       <div className="mb-[24px] flex items-center justify-between font-semibold text-secondary">

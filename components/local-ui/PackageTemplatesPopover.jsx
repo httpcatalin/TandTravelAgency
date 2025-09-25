@@ -1,34 +1,30 @@
 "use client";
 import { ApiSearchInputPopover } from "./ApiSearchInputPopover";
-import Image from "next/image";
 import { cn, objDeepCompare } from "@/lib/utils";
-
-import locationIcon from "@/public/icons/location.svg";
 import { Skeleton } from "../ui/skeleton";
-export function HotelDestinationPopover({
+
+export function PackageTemplatesPopover({
   isLoading,
   className,
   fetchInputs,
   defaultSelected,
-  excludeVals,
+  excludeVals = [],
   getSelected = () => {},
 }) {
   function renderSelectedResult(obj) {
     if (isLoading) {
       return (
         <div disabled={true} className={cn("rounded border p-2", className)}>
-          <Skeleton className={"mb-2 h-8 w-[130px]"} />
-          <Skeleton className={"h-4 w-[100px]"} />
+          <Skeleton className={"mb-2 h-8 w-[180px]"} />
+          <Skeleton className={"h-4 w-[120px]"} />
         </div>
       );
     }
 
     return (
       <div className={cn("rounded border p-2", className)}>
-        <div className={"text-2xl font-bold"}>
-          {obj?.country || obj?.label || "Country"}
-        </div>
-        {obj?.city && <div className={"text-sm"}>{obj?.city}</div>}
+        <div className={"text-2xl font-bold"}>{obj?.label || "Packages"}</div>
+        {obj?.description && <div className={"text-sm"}>{obj.description}</div>}
       </div>
     );
   }
@@ -45,11 +41,18 @@ export function HotelDestinationPopover({
         </div>
       );
     }
-    const filteredResultArr = result.data.filter((obj) => {
+
+    const list = Array.isArray(result?.data)
+      ? result.data
+      : Array.isArray(result?.data?.data)
+        ? result.data.data
+        : [];
+
+    const filtered = list.filter((obj) => {
       return !excludeVals.some((exObj) => objDeepCompare(obj, exObj));
     });
 
-    if (filteredResultArr.length === 0) {
+    if (filtered.length === 0) {
       return (
         <div className="flex h-full items-center justify-center p-2 text-center text-sm font-bold">
           No results found
@@ -57,7 +60,7 @@ export function HotelDestinationPopover({
       );
     }
 
-    return result.data.map((obj, i) => (
+    return filtered.map((obj, i) => (
       <div
         onClick={() => {
           setSelected(obj);
@@ -66,24 +69,22 @@ export function HotelDestinationPopover({
         key={i}
         className="flex cursor-pointer items-center gap-2 rounded-md border p-2 hover:bg-muted"
       >
-        <Image width={24} height={24} src={locationIcon} alt="location_icon" />
         <div>
           <div className={"text-md font-bold"}>{obj.label}</div>
+          {obj?.subtitle && <div className={"text-xs"}>{obj.subtitle}</div>}
         </div>
       </div>
     ));
   }
 
   return (
-    <>
-      <ApiSearchInputPopover
-        isLoading={isLoading}
-        fetchInputs={fetchInputs}
-        defaultSelected={defaultSelected}
-        renderSelectedResult={renderSelectedResult}
-        renderSearchResults={renderSearchResults}
-        getSelectedResult={getSelected}
-      />
-    </>
+    <ApiSearchInputPopover
+      isLoading={isLoading}
+      fetchInputs={fetchInputs}
+      defaultSelected={defaultSelected}
+      renderSelectedResult={renderSelectedResult}
+      renderSearchResults={renderSearchResults}
+      getSelectedResult={getSelected}
+    />
   );
 }

@@ -16,13 +16,16 @@ import SetCookies from "@/components/helpers/SetCookies";
 export default async function HotelResultPage({ params }) {
   const decodedSp = decodeURIComponent(params.hotelSearchParams);
   const spObj = Object.fromEntries(new URLSearchParams(decodedSp));
+  const isPackageMode = spObj?.package_mode === "1";
 
   let filters = extractFiltersObjFromSearchParams(spObj);
   const validatedFilters = validateHotelSearchFilter(filters);
 
   const session = await auth();
 
-  const validate = validateHotelSearchParams(spObj);
+  const validate = isPackageMode
+    ? { success: true, data: {} }
+    : validateHotelSearchParams(spObj);
 
   const formStateError = {
     ...spObj,
@@ -42,8 +45,100 @@ export default async function HotelResultPage({ params }) {
   delete formStateError.city;
   delete formStateError.country;
 
-  if (validate.success === false) {
+  if (!isPackageMode && validate.success === false) {
     return <SetHotelFormState obj={formStateError} />;
+  }
+
+  // Package mode: call package search endpoint and render using the same card
+  if (isPackageMode) {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+    const payload = {
+      package_template: spObj.package_template,
+      adults: Number(spObj.guests) || 1,
+      date_from: spObj.checkIn,
+      date_to: spObj.checkOut,
+      filters: validatedFilters?.data || {},
+    };
+    let packages = [];
+    try {
+      const res = await fetch(`${baseUrl}/api/hotels/packages/search`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        cache: "no-store",
+      });
+      const json = await res.json();
+      packages = json?.data?.results || [];
+    } catch (e) {
+      packages = [];
+    }
+
+    const hotelsFromPackages = packages.map((item, idx) => {
+      const hotel = item?.accommodation?.hotel || {};
+      const name = hotel?.name || "Hotel";
+      const addressObj = hotel?.address || {};
+      const address = Object.values(addressObj)
+        .filter((v) => typeof v === "string" && v.trim().length)
+        .join(", ");
+      const amenities = Array.isArray(hotel?.amenities)
+        ? hotel.amenities.slice(0, 5)
+        : Array.isArray(hotel?.features)
+        ? hotel.features.slice(0, 5)
+        : [];
+      const image =
+        item?.accommodation?.images?.[0]?.url ||
+        hotel?.images?.[0]?.url ||
+        hotel?.image ||
+        undefined;
+      const rating = Number(hotel?.rating) || 0;
+      const totalReviews = Number(hotel?.reviews_count) || 0;
+      const ratingScale = RATING_SCALE[Math.floor(rating)] || "N/A";
+      const amount = (() => {
+        const p = item?.price || {};
+        const v = p.amount ?? p.total ?? p.price ?? p.value ?? 0;
+        const n = Number(v);
+        return Number.isFinite(n) ? n : 0;
+      })();
+      const price = {
+        base: amount,
+        tax: 0,
+        serviceFee: 0,
+        discount: { type: "fixed", amount: 0 },
+      };
+      return {
+        _id: String(hotel?.id ?? hotel?.code ?? `${name}-${idx}`),
+        slug: "#",
+        name,
+        address,
+        amenities,
+        image,
+        price,
+        availableRoomsCount: 1,
+        rating,
+        totalReviews,
+        ratingScale,
+        liked: false,
+      };
+    });
+
+    const hotelResultsForCard = hotelsFromPackages.filter(Boolean);
+
+    return (
+      <div className="w-full">
+        <div className="mb-10">
+          <Jumper id={"hotelResults"} />
+        </div>
+        {!hotelResultsForCard?.length ? (
+          <EmptyResult className={"h-full w-full"} message="No Packages Found" />
+        ) : (
+          <div className="space-y-4">
+            {hotelResultsForCard.map((hotel) => (
+              <HotelResultCard key={hotel._id} hotel={hotel} searchState={{}} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
   }
 
   let hotels = await getHotels(validate.data, {
@@ -67,11 +162,11 @@ export default async function HotelResultPage({ params }) {
         const reviews = await getManyDocs(
           "HotelReview",
           { hotelId: hotel._id, slug: hotel.slug },
-          [hotel._id + "_review", hotel.slug + "_review", "hotelReviews"],
+          [hotel._id + "_review", hotel.slug + "_review", "hotelReviews"]
         );
         const totalRatingsSum = reviews.reduce(
           (acc, review) => acc + +review.rating,
-          0,
+          0
         );
         const totalReviewsCount = reviews.length;
         const rating = totalRatingsSum / totalReviewsCount;
@@ -104,7 +199,7 @@ export default async function HotelResultPage({ params }) {
           image: hotel.images[0],
           liked: hotel.liked,
         };
-      }),
+      })
     )
   ).filter(Boolean);
 

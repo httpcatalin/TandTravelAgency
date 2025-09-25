@@ -1,4 +1,5 @@
 import { HotelResultCard } from "@/components/pages/hotels.search/ui/HotelResultCard";
+import PackageResultCard from "@/components/pages/hotels.search/ui/PackageResultCard";
 import { getManyDocs } from "@/lib/db/getOperationDB";
 import { auth } from "@/lib/auth";
 import { RATING_SCALE } from "@/lib/constants";
@@ -73,53 +74,93 @@ export default async function HotelResultPage({ params }) {
       packages = [];
     }
 
-    const hotelsFromPackages = packages.map((item, idx) => {
-      const hotel = item?.accommodation?.hotel || {};
-      const name = hotel?.name || "Hotel";
-      const addressObj = hotel?.address || {};
-      const address = Object.values(addressObj)
-        .filter((v) => typeof v === "string" && v.trim().length)
-        .join(", ");
-      const amenities = Array.isArray(hotel?.amenities)
-        ? hotel.amenities.slice(0, 5)
-        : Array.isArray(hotel?.features)
-        ? hotel.features.slice(0, 5)
-        : [];
-      const image =
-        item?.accommodation?.images?.[0]?.url ||
-        hotel?.images?.[0]?.url ||
-        hotel?.image ||
-        undefined;
-      const rating = Number(hotel?.rating) || 0;
-      const totalReviews = Number(hotel?.reviews_count) || 0;
-      const ratingScale = RATING_SCALE[Math.floor(rating)] || "N/A";
-      const amount = (() => {
-        const p = item?.price || {};
-        const v = p.amount ?? p.total ?? p.price ?? p.value ?? 0;
-        const n = Number(v);
-        return Number.isFinite(n) ? n : 0;
-      })();
-      const price = {
-        base: amount,
-        tax: 0,
-        serviceFee: 0,
-        discount: { type: "fixed", amount: 0 },
-      };
-      return {
-        _id: String(hotel?.id ?? hotel?.code ?? `${name}-${idx}`),
-        slug: "#",
-        name,
-        address,
-        amenities,
-        image,
-        price,
-        availableRoomsCount: 1,
-        rating,
-        totalReviews,
-        ratingScale,
-        liked: false,
-      };
-    });
+    const hotelsFromPackages = await Promise.all(
+      packages.map(async (item, idx) => {
+        const hotel = item?.accommodation?.hotel || {};
+        const name = hotel?.name || "Hotel";
+        const addressObj = hotel?.address || {};
+        const address = Object.values(addressObj)
+          .filter((v) => typeof v === "string" && v.trim().length)
+          .join(", ");
+        const amenities = Array.isArray(hotel?.amenities)
+          ? hotel.amenities.slice(0, 5)
+          : Array.isArray(hotel?.features)
+            ? hotel.features.slice(0, 5)
+            : [];
+        const image =
+          item?.accommodation?.images?.[0]?.url ||
+          hotel?.images?.[0]?.url ||
+          hotel?.image ||
+          undefined;
+        const rating = Number(hotel?.rating) || 0;
+        const totalReviews = Number(hotel?.reviews_count) || 0;
+        const ratingScale = RATING_SCALE[Math.floor(rating)] || "N/A";
+        const amount = (() => {
+          const p = item?.price || {};
+          const v = p.amount ?? p.total ?? p.price ?? p.value ?? 0;
+          const n = Number(v);
+          return Number.isFinite(n) ? n : 0;
+        })();
+        const price = {
+          base: amount,
+          tax: 0,
+          serviceFee: 0,
+          discount: { type: "fixed", amount: 0 },
+        };
+        // Try to fetch first GIATA image if API exists
+        let giataImage;
+        try {
+          const giataRes = await fetch(
+            `${baseUrl}/api/giata/hotel/${encodeURIComponent(hotel?.id)}`,
+            { cache: "no-store" }
+          );
+          if (giataRes.ok) {
+            const g = await giataRes.json();
+            // Prefer server-computed URL when available
+            giataImage = g?.firstImageProxyPath || g?.firstImageUrl;
+            if (!giataImage) {
+              // Otherwise, compute from first media href using env base URL
+              const firstHref =
+                g?.media?.large?.[0]?.href ||
+                g?.media?.small?.[0]?.href ||
+                g?.data?.media?.large?.[0]?.href ||
+                g?.data?.media?.small?.[0]?.href ||
+                g?.content?.media?.large?.[0]?.href ||
+                g?.content?.media?.small?.[0]?.href;
+              const externalBase = process.env.EXTERNAL_API_BASE_URL?.replace(
+                /\/api\/v2\/?$/,
+                ""
+              )?.replace(/\/$/, "");
+              if (firstHref) {
+                // Prefer proxy path to preserve auth
+                giataImage = `/api/giata/image?href=${encodeURIComponent(firstHref)}`;
+              } else {
+                // Fallback to any legacy shapes
+                giataImage =
+                  g?.images?.[0]?.url || g?.data?.images?.[0] || undefined;
+              }
+            }
+          }
+        } catch {}
+
+        return {
+          _id: String(hotel?.id ?? hotel?.code ?? `${name}-${idx}`),
+          slug: "#",
+          name,
+          address,
+          amenities,
+          image: giataImage || image,
+          price,
+          availableRoomsCount: 1,
+          rating,
+          totalReviews,
+          ratingScale,
+          liked: false,
+          __raw: item,
+          __giataImage: giataImage,
+        };
+      })
+    );
 
     const hotelResultsForCard = hotelsFromPackages.filter(Boolean);
 
@@ -129,11 +170,18 @@ export default async function HotelResultPage({ params }) {
           <Jumper id={"hotelResults"} />
         </div>
         {!hotelResultsForCard?.length ? (
-          <EmptyResult className={"h-full w-full"} message="No Packages Found" />
+          <EmptyResult
+            className={"h-full w-full"}
+            message="No Packages Found"
+          />
         ) : (
           <div className="space-y-4">
             {hotelResultsForCard.map((hotel) => (
-              <HotelResultCard key={hotel._id} hotel={hotel} searchState={{}} />
+              <PackageResultCard
+                key={hotel._id}
+                item={hotel.__raw}
+                imageUrl={hotel.__giataImage || hotel.image}
+              />
             ))}
           </div>
         )}

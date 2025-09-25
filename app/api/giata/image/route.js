@@ -18,9 +18,7 @@ export async function GET(req) {
       );
     }
 
-    const rootBase = apiBaseUrl
-      .replace(/\/api\/v2\/?$/, "")
-      .replace(/\/$/, "");
+    const rootBase = apiBaseUrl.replace(/\/api\/v2\/?$/, "").replace(/\/$/, "");
     const path = href.startsWith("/") ? href : `/${href}`;
     const targetUrl = `${rootBase}${path}`;
 

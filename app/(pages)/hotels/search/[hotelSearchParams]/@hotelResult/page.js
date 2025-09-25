@@ -107,39 +107,17 @@ export default async function HotelResultPage({ params }) {
           serviceFee: 0,
           discount: { type: "fixed", amount: 0 },
         };
-        // Try to fetch first GIATA image if API exists
-        let giataImage;
+        // Try to fetch first photo via Google Places (server-proxied)
+        let giataImage; // repurpose variable for imageUrl
         try {
-          const giataRes = await fetch(
-            `${baseUrl}/api/giata/hotel/${encodeURIComponent(hotel?.id)}`,
+          const query = [name, address].filter(Boolean).join(", ");
+          const gpRes = await fetch(
+            `${baseUrl}/api/google/places/photo?q=${encodeURIComponent(query)}`,
             { cache: "no-store" }
           );
-          if (giataRes.ok) {
-            const g = await giataRes.json();
-            // Prefer server-computed URL when available
-            giataImage = g?.firstImageProxyPath || g?.firstImageUrl;
-            if (!giataImage) {
-              // Otherwise, compute from first media href using env base URL
-              const firstHref =
-                g?.media?.large?.[0]?.href ||
-                g?.media?.small?.[0]?.href ||
-                g?.data?.media?.large?.[0]?.href ||
-                g?.data?.media?.small?.[0]?.href ||
-                g?.content?.media?.large?.[0]?.href ||
-                g?.content?.media?.small?.[0]?.href;
-              const externalBase = process.env.EXTERNAL_API_BASE_URL?.replace(
-                /\/api\/v2\/?$/,
-                ""
-              )?.replace(/\/$/, "");
-              if (firstHref) {
-                // Prefer proxy path to preserve auth
-                giataImage = `/api/giata/image?href=${encodeURIComponent(firstHref)}`;
-              } else {
-                // Fallback to any legacy shapes
-                giataImage =
-                  g?.images?.[0]?.url || g?.data?.images?.[0] || undefined;
-              }
-            }
+          if (gpRes.ok) {
+            const gp = await gpRes.json();
+            giataImage = gp?.data?.photo?.proxyPath || giataImage;
           }
         } catch {}
 

@@ -54,7 +54,11 @@ export async function GET(req, { params }) {
               ? `/api/giata/image?href=${encodeURIComponent(firstHref)}`
               : undefined;
             if (hotelId == 44) console.log(firstImageUrl);
-            return Response.json({ ...data, firstImageUrl, firstImageProxyPath });
+            return Response.json({
+              ...data,
+              firstImageUrl,
+              firstImageProxyPath,
+            });
           } catch {
             return Response.json(data);
           }

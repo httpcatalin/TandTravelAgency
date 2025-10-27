@@ -1,5 +1,6 @@
 import { HotelResultCard } from "@/components/pages/hotels.search/ui/HotelResultCard";
 import PackageResultCard from "@/components/pages/hotels.search/ui/PackageResultCard";
+import { PackageSearchResults } from "@/components/pages/hotels.search/ui/PackageSearchResults";
 import { getManyDocs } from "@/lib/db/getOperationDB";
 import { auth } from "@/lib/auth";
 import { RATING_SCALE } from "@/lib/constants";
@@ -147,22 +148,10 @@ export default async function HotelResultPage({ params }) {
         <div className="mb-10">
           <Jumper id={"hotelResults"} />
         </div>
-        {!hotelResultsForCard?.length ? (
-          <EmptyResult
-            className={"h-full w-full"}
-            message="No Packages Found"
-          />
-        ) : (
-          <div className="space-y-4">
-            {hotelResultsForCard.map((hotel) => (
-              <PackageResultCard
-                key={hotel._id}
-                item={hotel.__raw}
-                imageUrl={hotel.__giataImage || hotel.image}
-              />
-            ))}
-          </div>
-        )}
+        <PackageSearchResults
+          initialPackages={hotelResultsForCard}
+          searchParams={spObj}
+        />
       </div>
     );
   }

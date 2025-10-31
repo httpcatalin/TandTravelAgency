@@ -1,8 +1,12 @@
+import { getApiToken } from '@/lib/utils.server';
+
 export async function POST(req) {
   try {
-    const bearerToken = process.env.EXTERNAL_API_BEARER_TOKEN;
+    const bearerToken = await getApiToken();
     const apiBaseUrl = process.env.EXTERNAL_API_BASE_URL;
     const airportCityFromEnv = process.env.EXTERNAL_API_AIRPORT_CITY_FROM;
+
+    console.log(bearerToken, apiBaseUrl, airportCityFromEnv);
     if (!bearerToken || !apiBaseUrl) {
       return Response.json(
         { success: false, message: "Missing required environment variables" },
@@ -86,13 +90,14 @@ export async function POST(req) {
         const qs = acf ? `?airport_city_from=${encodeURIComponent(acf)}` : "";
 
         const locRes = await fetch(
-          `${apiBaseUrl}/search/package_templates/${packageTemplateId}/locations${qs}`,
+          `${apiBaseUrl}/api/v2/search/package_templates/${packageTemplateId}/locations${qs}`,
           {
             method: "GET",
             headers: { Authorization: `Bearer ${bearerToken}` },
             cache: "no-store",
           }
         );
+        console.log(locRes);
         if (locRes.ok) {
           const locData = await locRes.json();
           const regions = Array.isArray(locData)
@@ -119,10 +124,11 @@ export async function POST(req) {
             );
             if (merged.length) body.airport_city_to = merged;
           }
+          
         }
 
         const hotelsRes = await fetch(
-          `${apiBaseUrl}/search/package_templates/${packageTemplateId}/hotels${qs}`,
+          `${apiBaseUrl}/api/v2/search/package_templates/${packageTemplateId}/hotels${qs}`,
           {
             method: "GET",
             headers: { Authorization: `Bearer ${bearerToken}` },
@@ -158,7 +164,7 @@ export async function POST(req) {
         console.warn("Package prefetch failed", e?.message || e);
       }
     }
-    const url = `${apiBaseUrl}/search`;
+    const url = `${apiBaseUrl}/api/v2/search`;
 
     const response = await fetch(url, {
       method: "POST",

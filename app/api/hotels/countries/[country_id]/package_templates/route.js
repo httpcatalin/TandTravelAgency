@@ -1,6 +1,8 @@
+import { getApiToken } from '@/lib/utils.server';
+
 export async function GET(req, { params }) {
   try {
-    const bearerToken = process.env.EXTERNAL_API_BEARER_TOKEN;
+    const bearerToken = await getApiToken();
     const apiBaseUrl = process.env.EXTERNAL_API_BASE_URL;
     const airportCityFrom = process.env.EXTERNAL_API_AIRPORT_CITY_FROM;
 
@@ -23,7 +25,7 @@ export async function GET(req, { params }) {
     }
 
     const url = new URL(
-      `${apiBaseUrl}/search/countries/${encodeURIComponent(
+      `${apiBaseUrl}/api/v2/search/countries/${encodeURIComponent(
         countryId
       )}/package_templates`
     );

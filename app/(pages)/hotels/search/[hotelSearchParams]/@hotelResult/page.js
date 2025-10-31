@@ -64,7 +64,10 @@ export default async function HotelResultPage({ params }) {
     try {
       const res = await fetch(`${baseUrl}/api/hotels/packages/search`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          cookie: cookies().toString(), 
+         },
         body: JSON.stringify(payload),
         cache: "no-store",
       });

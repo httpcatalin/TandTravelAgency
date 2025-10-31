@@ -1,15 +1,17 @@
+import { getApiToken } from '@/lib/utils.server';
+
 export async function GET(req) {
   try {
-    const bearerToken = process.env.EXTERNAL_API_BEARER_TOKEN;
+    const bearerToken = await getApiToken();
     const apiBaseUrl = process.env.EXTERNAL_API_BASE_URL;
     const airportCityFrom = process.env.EXTERNAL_API_AIRPORT_CITY_FROM;
-
+  
     if (!bearerToken || !apiBaseUrl || !airportCityFrom) {
       throw new Error("Missing required environment variables");
     }
 
     // Build the URL with query parameters
-    const url = new URL(`${apiBaseUrl}/search/countries`);
+    const url = new URL(`${apiBaseUrl}/api/v2/search/countries`);
     url.searchParams.append("airport_city_from", airportCityFrom);
 
     const response = await fetch(url.toString(), {
@@ -32,7 +34,7 @@ export async function GET(req) {
       data: data,
     });
   } catch (error) {
-    console.error("Error fetching countries:", error);
+    console.error("Error fetching countries:", error.data || error.message);
     return Response.json(
       {
         success: false,

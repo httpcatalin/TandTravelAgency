@@ -1,3 +1,4 @@
+import { getApiToken } from '@/lib/utils.server';
 import { NextResponse } from "next/server";
 
 export async function GET(request, { params }) {
@@ -12,7 +13,7 @@ export async function GET(request, { params }) {
     }
 
     const baseUrl = process.env.EXTERNAL_API_BASE_URL;
-    const bearerToken = process.env.EXTERNAL_API_BEARER_TOKEN;
+    const bearerToken = await getApiToken();
 
     if (!baseUrl || !bearerToken) {
       console.error("Missing environment variables:", {
@@ -25,7 +26,7 @@ export async function GET(request, { params }) {
       );
     }
 
-    const url = `${baseUrl}/search/package_templates/${template_id}/meals`;
+    const url = `${baseUrl}/api/v2/search/package_templates/${template_id}/meals`;
 
     const response = await fetch(url, {
       method: "GET",

@@ -1,6 +1,8 @@
+import { getApiToken } from '@/lib/utils.server';
+
 export async function GET(req) {
   try {
-    const bearerToken = process.env.EXTERNAL_API_BEARER_TOKEN;
+    const bearerToken = await getApiToken();
     const apiBaseUrl = process.env.EXTERNAL_API_BASE_URL;
     if (!bearerToken || !apiBaseUrl) {
       return Response.json(

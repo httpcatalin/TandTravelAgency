@@ -17,6 +17,7 @@ import SetNecessaryCookies from "./SetNecessaryCookies";
 import { getOneDoc } from "@/lib/db/getOperationDB";
 import { headers } from "next/headers";
 import { Analytics } from "@vercel/analytics/next";
+import { ApiAuthInitializer } from '@/components/ApiAuthInitializer';
 
 const monse = Montserrat({
   subsets: ["latin"],
@@ -30,15 +31,15 @@ const tradegothic = localFont({
 });
 
 export const metadata = {
-  title: "Golob Travel Agency",
+  title: "Tand Travel Agency",
   description:
-    "Golob Travel Agency is a travel agency that provides top-notch travel services.",
+    "Tand Travel Agency is a travel agency that provides top-notch travel services.",
   keywords: [
     "travel",
     "agency",
-    "golob",
+    "tand",
     "travel agency",
-    "golob travel agency",
+    "tand travel agency",
     "nextjs",
     "react",
     "javascript",
@@ -51,10 +52,10 @@ export const metadata = {
   ],
   metadataBase: new URL("https://golob-travel-agency.vercel.app"),
   openGraph: {
-    title: "Golob Travel Agency",
+    title: "Tand Travel Agency",
     description:
-      "Golob Travel Agency is a travel agency that provides top-notch travel services (fake, personal project).",
-    siteName: "Golob Travel Agency",
+      "Tand Travel Agency is a travel agency that provides top-notch travel services",
+    siteName: "Tand Travel Agency",
     images: [
       {
         url: openGraph.src,
@@ -124,6 +125,7 @@ export default async function RootLayout({ children }) {
         <Toaster richColors closeButton expand position="top-right" />
         <SetNecessaryCookies />
         <Analytics />
+        <ApiAuthInitializer />
       </body>
     </html>
   );

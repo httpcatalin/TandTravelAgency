@@ -1,6 +1,7 @@
+import { getApiToken } from '@/lib/utils.server';
 export async function GET(req, { params }) {
   try {
-    const bearerToken = process.env.EXTERNAL_API_BEARER_TOKEN;
+    const bearerToken = await getApiToken();
     const apiBaseUrl = process.env.EXTERNAL_API_BASE_URL;
 
     if (!bearerToken || !apiBaseUrl) {
@@ -19,7 +20,7 @@ export async function GET(req, { params }) {
     }
 
     const response = await fetch(
-      `${apiBaseUrl}/search/package_templates/${templateId}/hotel_categories`,
+      `${apiBaseUrl}/api/v2/search/package_templates/${templateId}/hotel_categories`,
       {
         method: "GET",
         headers: {

@@ -1,51 +1,147 @@
 # Changelog
 
-All notable changes to the T&T Travel Agency project will be documented in this file.
+## 📋 Project Information
+
+- **Team Number:** 10
+- **Project Name:** Tand Travel Agency
+- **Repository:** https://github.com/httpcatalin/TandTravelAgency
+
+## [v2.0.0] - 2025-11-29
+
+### 🔐 Authentication System (authentication branch)
+
+This release introduces a completely refactored authentication system with new sign-up, sign-in, and sign-out functionality, along with major architectural improvements.
+
+#### Added - Profile & Account Management
+
+**Commit:** `b0349ad` by **davidfl10** on 2025-11-29
+
+- ✅ Added `AccountDetails` component for user profile management
+- ✅ Created `ProfileData` component for displaying user information
+- Updated signup flow with improved user experience
+- Enhanced `signUpAction` with additional validation and error handling
+- **Locations:**
+  - `components/pages/profile/AccountDetails.jsx` (110 lines)
+  - `components/pages/profile/ProfileData.jsx` (41 lines)
+  - `components/pages/signup/SignupForm.jsx` (updated)
+  - `lib/actions/signUpAction.js` (enhanced)
+- **Commit:** [View Commit](https://github.com/httpcatalin/TandTravelAgency/commit/b0349ad)
+
+#### Added - User Authentication Components
+
+**Commit:** `9d6eca9` by **Corina Cosneanu** on 2025-11-29
+
+- ✅ Created `SignupForm` component for user registration
+- Implemented comprehensive form validation
+- Added user-friendly registration UI with form fields
+- **Location:** `components/pages/signup/SignupForm.jsx`
+- **Commit:** [View Commit](https://github.com/httpcatalin/TandTravelAgency/commit/9d6eca9479fc6b3168255fb74e3d7c8cb2730c36)
+
+**Commit:** `9375317` by **Alexandrina Ciur** on 2025-11-29
+
+- ✅ Created `LoginForm` component for user authentication
+- Designed responsive login interface
+- Integrated with authentication actions
+- **Location:** `components/pages/login/LoginForm.jsx`
+- **Commit:** [View Commit](https://github.com/httpcatalin/TandTravelAgency/commit/9375317dff5b39e9750a2e32c214d096611d14ae)
+
+#### Added - Authentication Actions
+
+**Commit:** `e5eb75c` by **rotaruanastasia242** on 2025-11-29
+
+- ✅ Created sign-up action function with full validation
+- Implemented user registration logic
+- Added error handling for registration process
+- **Location:** `lib/actions/signUpAction.js`
+- **Commit:** [View Commit](https://github.com/httpcatalin/TandTravelAgency/commit/e5eb75c26171d792f0d1724d47fd671985b7db7f)
+
+**Commit:** `9fbf40f` by **alo42** on 2025-11-29
+
+- ✅ Implemented sign-in authentication function
+- Created sign-out functionality
+- Added session management capabilities
+- **Locations:**
+  - `lib/actions/authenticateActions.js` (79 lines)
+  - `lib/actions/signOutAction.js` (10 lines)
+- **Commit:** [View Commit](https://github.com/httpcatalin/TandTravelAgency/commit/9fbf40f85512df2a1d48e462ea635b1efc987a9f)
+
+#### Removed - Stripe Payment Integration
+
+**Commit:** `e54116a` by **Catalin** on 2025-11-29
+
+- Removed Stripe payment and card management features
+- Simplified payment flow for initial release
+- Cleaned up unused payment-related code
+- **Major Changes:**
+  - Removed `app/api/stripe/` endpoints (payment intents, setup intents, webhooks)
+  - Removed `PayWithNewCardForm` and `PayWithSavedCard` components
+  - Removed `AddPaymentCard` and `SavedCards` components
+  - Removed `useFetchCards` hook
+  - Cleaned up `lib/paymentIntegration/stripe/` services
+  - Updated `lib/services/flights.js` and `lib/services/hotels.js`
+  - Removed payment-related database schemas
+- **Commit:** [View Commit](https://github.com/httpcatalin/TandTravelAgency/commit/e54116a752d0b4590e500454ff4e17e92d92e5a8)
 
 ---
 
-## [Unreleased] - 2025-11-02
+### 🏨 Dynamic Hotel Page Enhancement
 
-### Added - Hotel Booking Page
+**Commit:** `06470f8` by **Catalin** on 2025-11-29
 
-**Commit:** `e05755a` by anastasia on 2025-11-02
+- ✅ Added dynamic hotel page with improved routing
+- Refactored project structure for better maintainability
+- Enhanced `PackageResultCard` component with new features
+- Updated Next.js configuration
+- Improved rating display component
+- **Key Changes:**
+  - Updated `app/(pages)/hotels/[hotelSearchParams]/@hotelResult/page.js`
+  - Enhanced `components/local-ui/ratingShow.js`
+  - Improved `components/pages/hotels.search/ui/PackageResultCard.jsx`
+  - Updated `next.config.mjs` configuration
+- **Branch:** `hotel-page`
+- **Commit:** [View Commit](https://github.com/httpcatalin/TandTravelAgency/commit/06470f814066e73902535e53e57c18c88c7d2031)
 
-- Created new hotel booking page with authentication
+---
+
+## [v1.2.0] - 2025-11-02
+
+### 🏨 Hotel Booking Page
+
+**Commit:** `e05755a` by **anastasia** on 2025-11-02
+
+- ✅ Created new hotel booking page with authentication
 - Added validation for booking forms
 - Implemented booking flow at `/hotels/[slug]/book/page.js`
-- **Files Changed:** 1 file, 69 insertions(+)
 
 ---
 
-## [Hotel Details Page] - 2025-11-02
+### 🏨 Hotel Details Page
 
-### Added - Hotel Details
+**Commit:** `b66bb82` by **alo42** on 2025-11-02
 
-**Commit:** `b66bb82` by alo42 on 2025-11-02
-
-- Implemented comprehensive hotel details page
+- ✅ Implemented comprehensive hotel details page
 - Added room information display
 - Integrated review information section
 - Created dynamic slug-based routing for hotels
-- **Files Changed:** 1 file, 418 insertions(+)
 - **Location:** `app/(pages)/hotels/[slug]/page.js`
+- **Pull Request:** [View Commit](https://github.com/httpcatalin/TandTravelAgency/commit/b66bb82)
 
 ---
 
-## [Security Enhancement] - 2025-11-02
+### 🔒 Security Enhancement
 
-### Added - External API Authentication
+**Commit:** `ebf0798` by **davidfl10** on 2025-11-02
 
-**Commit:** `ebf0798` by davidfl10 on 2025-11-02
+#### Added - External API Authentication
 
-- Merged security branch into main
+- ✅ Merged security branch into main
 - Implemented external API authentication system
 - Added `ApiAuthInitializer` component for API initialization
 - Created external authentication route handler
 - Added external API hooks (`useExternalApi`)
 - Implemented external API authentication service
 
-### Changed
+#### Changed
 
 - Updated app layout with new authentication integration
 - Modified Logo component (reduced from complex implementation)
@@ -59,28 +155,30 @@ All notable changes to the T&T Travel Agency project will be documented in this 
 - Updated authentication utilities in `lib/auth.js`
 - Modified user forms layout
 
-### Added - Assets
+#### Added - Assets
 
 - Added new logo image: `public/images/logo.png` (933KB)
 
-### Dependencies
+#### Dependencies
 
 - Added 1 new package dependency
 - Updated `package-lock.json` with security improvements
+- **Pull Request:** [View Commit](https://github.com/httpcatalin/TandTravelAgency/commit/ebf0798)
 
 ---
 
-## [Hotel Search Enhancement] - 2025-10-27
+## [v1.1.0] - 2025-10-27
 
-### Added - Advanced Filtering System
+### 🔍 Hotel Search Enhancement - Advanced Filtering System
 
-**Commit:** `375bd07` by Catalin on 2025-10-27
+**Commit:** `375bd07` by **Catalin** on 2025-10-27
+**Branch:** `filtering`
 
 #### New API Endpoints
 
-- Created hotel categories filtering API: `app/api/v2/search/package_templates/[template_id]/hotel_categories/route.js` (82 lines)
-- Created locations filtering API: `app/api/v2/search/package_templates/[template_id]/locations/route.js` (92 lines)
-- Created meals filtering API: `app/api/v2/search/package_templates/[template_id]/meals/route.js` (72 lines)
+- ✅ Created hotel categories filtering API: `app/api/v2/search/package_templates/[template_id]/hotel_categories/route.js` (82 lines)
+- ✅ Created locations filtering API: `app/api/v2/search/package_templates/[template_id]/locations/route.js` (92 lines)
+- ✅ Created meals filtering API: `app/api/v2/search/package_templates/[template_id]/meals/route.js` (72 lines)
 
 #### New Components & Hooks
 
@@ -97,8 +195,7 @@ All notable changes to the T&T Travel Agency project will be documented in this 
 - Significantly improved `HotelsFilter` component (596 lines expanded from 136 lines)
 - Enhanced hotel search results page with better filtering
 - Added Redux state management for additional filter options
-
-**Files Changed:** 13 files, 1,197 insertions(+), 136 deletions(-)
+- **Pull Request:** [View Branch](https://github.com/httpcatalin/TandTravelAgency/tree/filtering)
 
 ---
 
@@ -110,14 +207,12 @@ All notable changes to the T&T Travel Agency project will be documented in this 
 
 - Removed 24 lines of code from Footer component
 - Code cleanup and optimization
-- **Files Changed:** 1 file, 24 deletions(-)
 
 ### Changed - Layout Adjustment
 
 **Commit:** `bc2e932` by Catalin on 2025-10-02
 
 - Minor adjustment to app layout configuration
-- **Files Changed:** 1 file, 1 insertion(+), 1 deletion(-)
 
 ### Changed - Package Configuration
 
@@ -125,7 +220,6 @@ All notable changes to the T&T Travel Agency project will be documented in this 
 
 - Updated package.json configuration
 - Added 3 new lines, modified 1 line
-- **Files Changed:** 1 file, 3 insertions(+), 1 deletion(-)
 
 ---
 
@@ -142,8 +236,6 @@ All notable changes to the T&T Travel Agency project will be documented in this 
 - Updated GIATA image handling
 - Improved hotel search results display with photo integration
 
-**Files Changed:** 5 files, 161 insertions(+), 34 deletions(-)
-
 ### Added - Hotel Components
 
 **Commit:** `15caf79` by Catalin on 2025-09-25
@@ -152,8 +244,6 @@ All notable changes to the T&T Travel Agency project will be documented in this 
 - Enhanced GIATA hotel API route (86 lines)
 - Added GIATA image route handler (49 lines)
 - Improved hotel search results page (146 lines expanded from 49 lines)
-
-**Files Changed:** 4 files, 374 insertions(+), 49 deletions(-)
 
 ---
 
@@ -186,7 +276,4 @@ All notable changes to the T&T Travel Agency project will be documented in this 
 
 ### Key Contributors:
 
-1. **Catalin** - Lead developer, core features, initial setup
-2. **davidfl10** - Security features, bug fixes
-3. **alo42** - Hotel details implementation
-4. **anastasia** - Hotel booking page
+**Key Areas:** Signup form UI, registration form design

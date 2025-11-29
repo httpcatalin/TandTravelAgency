@@ -65,12 +65,13 @@ export function SignupForm() {
           />
           <Input
             type="tel"
-            placeholder={"Enter your phone number (optional)"}
+            placeholder={"Enter your phone number"}
             dialCodePlaceholder={"+XXX"}
             name={"phone"}
-            label={"Phone (optional)"}
+            label={"Phone"}
             error={state?.error?.phone}
             maxLength={15}
+            required
             className={
               "max-sm:col-span-2 sm:col-span-1 md:col-span-2 lg:col-span-1"
             }

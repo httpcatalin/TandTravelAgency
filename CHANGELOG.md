@@ -20,11 +20,6 @@ This release introduces a completely refactored authentication system with new s
 - ✅ Created `ProfileData` component for displaying user information
 - Updated signup flow with improved user experience
 - Enhanced `signUpAction` with additional validation and error handling
-- **Locations:**
-  - `components/pages/profile/AccountDetails.jsx` (110 lines)
-  - `components/pages/profile/ProfileData.jsx` (41 lines)
-  - `components/pages/signup/SignupForm.jsx` (updated)
-  - `lib/actions/signUpAction.js` (enhanced)
 - **Commit:** [View Commit](https://github.com/httpcatalin/TandTravelAgency/commit/b0349ad)
 
 #### Added - User Authentication Components

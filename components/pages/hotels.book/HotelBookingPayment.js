@@ -7,9 +7,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
 import { confirmHotelBookingCashAction } from "@/lib/actions/confirmHotelBookingAction";
 export default function HotelBookingPayment({
   slug,
@@ -17,7 +14,6 @@ export default function HotelBookingPayment({
   checkOutDate,
 }) {
   const router = useRouter();
-  const [paymentMethodType, setPaymentMethodType] = useState("cash");
   const {
     data: hotelBookingData,
     loading: hotelBookingLoading,
@@ -36,69 +32,6 @@ export default function HotelBookingPayment({
     },
   );
 
-  const { data, loading, error, retry } = useFetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/stripe/create_hotel_booking_payment_intent`,
-    {
-      method: "POST",
-      contentType: "application/json",
-      body: JSON.stringify({
-        slug,
-        checkInDate,
-        checkOutDate,
-      }),
-    },
-  );
-  async function middleware(next = async () => {}) {
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/user/get_reserved_hotel`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            slug,
-            checkInDate,
-            checkOutDate,
-          }),
-        },
-      );
-      if (!res.ok) {
-        throw new Error("Failed to fetch booking details");
-      }
-
-      const data = await res.json();
-
-      if (data.success === false) {
-        throw new Error(data.message);
-      }
-
-      await next();
-    } catch (e) {
-      console.log(e);
-      toast({
-        title: "Failed confirming payment",
-        description: e.message,
-        variant: "destructive",
-      });
-    }
-  }
-
-  function onSuccessCard() {
-    toast({
-      title: "Payment successful",
-      description: "Your payment was successful, redirecting...",
-      variant: "default",
-    });
-
-    setTimeout(() => {
-      const searchParams = new URLSearchParams({
-        title: "Payment successful",
-        message: "Your payment was successful",
-        callbackUrl: `/user/my_bookings/hotels/${hotelBookingData.data._id}/invoice`,
-        callbackTitle: "Download Invoice",
-      });
-      router.push(`/success?${searchParams.toString()}`);
-    }, 2000);
-  }
   function onSuccessCash() {
     toast({
       title: "Booking confirmed",
@@ -160,73 +93,37 @@ export default function HotelBookingPayment({
         </div>
       </div>
       <div className="mb-[20px] rounded-[12px] bg-white p-[16px] shadow-md lg:mb-[30px] xl:mb-[40px]">
-        <RadioGroup onValueChange={setPaymentMethodType} defaultValue="cash">
-          <Label className="flex grow items-center justify-between gap-[32px] rounded-[12px] p-[16px] has-[[data-state='checked']]:bg-primary">
-            <div>
-              <p className="mb-2 font-bold">Pay in Property</p>
-              <p className="text-[0.875rem]">
-                Pay at the property when you check-in.
-              </p>
-            </div>
-            <RadioGroupItem
-              className="border-2 data-[state='checked']:border-white data-[state='checked']:text-white"
-              value="cash"
-            />
-          </Label>
-          <Label className="flex grow items-center justify-between gap-[32px] rounded-[12px] p-[16px] has-[[data-state='checked']]:bg-primary">
-            <div>
-              <p className="mb-2 font-bold">Pay now</p>
-              <p className="text-[0.875rem]">
-                Pay now and get your room reserved.
-              </p>
-            </div>
-            <RadioGroupItem
-              className="border-2 data-[state='checked']:border-white data-[state='checked']:text-white"
-              value="card"
-            />
-          </Label>
-        </RadioGroup>
+        <p className="text-sm text-secondary">
+          Card payments are unavailable in this environment. Please confirm the
+          booking now and settle the balance directly with the property.
+        </p>
       </div>
-      <div className="flex justify-center rounded-[12px] bg-white p-[16px] shadow-md lg:mb-[30px] xl:mb-[40px]">
-        {paymentMethodType === "card" && (
-          <MakePaymentSection
-            className={"w-full shadow-none"}
-            onSuccess={onSuccessCard}
-            middleware={middleware}
-            loading={loading}
-            error={error}
-            retry={retry}
-            paymentIntents={data?.data?.paymentIntents}
-            paymentStatus={data?.data?.paymentStatus}
-          />
-        )}
-        {paymentMethodType === "cash" && (
-          <Button
-            onClick={async (e) => {
-              e.target.disabled = true;
-              const { success, message } = await confirmHotelBookingCashAction(
-                hotelBookingData?.data?._id,
-              );
+      <div className="flex flex-col gap-4 rounded-[12px] bg-white p-[16px] text-center shadow-md lg:mb-[30px] xl:mb-[40px]">
+        <MakePaymentSection className={"w-full shadow-none"} />
+        <Button
+          onClick={async (e) => {
+            e.currentTarget.disabled = true;
+            const { success, message } = await confirmHotelBookingCashAction(
+              hotelBookingData?.data?._id,
+            );
 
-              if (!success) {
-                toast({
-                  title: "Error",
-                  description: message,
-                  variant: "destructive",
-                });
-              }
-              if (success) {
-                onSuccessCash();
-              }
-              e.target.disabled = false;
-            }}
-            variant="default"
-            disabled={loading}
-            className="w-[200px] text-center"
-          >
-            Pay Later
-          </Button>
-        )}
+            if (!success) {
+              toast({
+                title: "Error",
+                description: message,
+                variant: "destructive",
+              });
+            }
+            if (success) {
+              onSuccessCash();
+            }
+            e.currentTarget.disabled = false;
+          }}
+          variant="default"
+          className="mx-auto w-[200px]"
+        >
+          Confirm & Pay Later
+        </Button>
       </div>
     </>
   );

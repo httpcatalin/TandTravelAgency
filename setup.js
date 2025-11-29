@@ -64,15 +64,6 @@ async function createEnvFile() {
   const baseUrl =
     (await prompt("🌐 Base URL (default: http://localhost:3000): ")) ||
     "http://localhost:3000";
-  const stripeSecretKey = await prompt(
-    "💳 Stripe Secret Key (starts with sk_test_): ",
-  );
-  const stripePublishableKey = await prompt(
-    "💳 Stripe Publishable Key (starts with pk_test_): ",
-  );
-  const stripeWebhookSecret = await prompt(
-    "🔗 Stripe Webhook Secret (starts with whsec_): ",
-  );
   const mailjetApiToken = await prompt("📧 Mailjet API Token: ");
   const mailjetSecretToken = await prompt("📧 Mailjet Secret Token: ");
   const senderEmail = await prompt("📧 Sender Email: ");
@@ -109,13 +100,6 @@ NEXT_PUBLIC_REVALIDATION_TIME=600
 # ===========================================
 API_SECRET_TOKEN=${apiSecretToken}
 CRON_SECRET=${cronSecret}
-
-# ===========================================
-# STRIPE PAYMENT PROCESSING
-# ===========================================
-STRIPE_SECRET_KEY=${stripeSecretKey}
-NEXT_PUBLIC_STRIPE_PK=${stripePublishableKey}
-STRIPE_WEBHOOK_SECRET=${stripeWebhookSecret}
 
 # ===========================================
 # EMAIL CONFIGURATION (Mailjet)

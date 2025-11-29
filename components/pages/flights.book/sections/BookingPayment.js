@@ -5,10 +5,8 @@ import MakePaymentSection from "@/components/sections/MakePaymentSection";
 import useFetch from "@/lib/hooks/useFetch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
-import { useRouter } from "next/navigation";
+
 export default function BookingPayment({ flightNumber, flightDateTimestamp }) {
-  const router = useRouter();
   const {
     data: flightBookingData,
     loading: flightBookingLoading,
@@ -25,68 +23,6 @@ export default function BookingPayment({ flightNumber, flightDateTimestamp }) {
       }),
     },
   );
-  const { data, loading, error, retry } = useFetch(
-    `${process.env.NEXT_PUBLIC_BASE_URL}/api/stripe/create_flight_booking_payment_intent`,
-    {
-      method: "POST",
-      contentType: "application/json",
-      body: JSON.stringify({
-        flightNumber,
-        flightDateTimestamp,
-      }),
-    },
-  );
-  async function middleware(next = async () => {}) {
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL}/api/user/get_reserved_flight`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            flightNumber: flightNumber,
-            flightDateTimestamp,
-          }),
-        },
-      );
-      if (!res.ok) {
-        throw new Error("Failed to load flight booking");
-      }
-
-      const data = await res.json();
-
-      if (data.success === false) {
-        throw new Error(data.message);
-      }
-
-      await next();
-    } catch (e) {
-      console.log(e);
-      toast({
-        title: "Failed confirming payment",
-        description: e.message,
-        variant: "destructive",
-      });
-    }
-  }
-
-  function onSuccess() {
-    toast({
-      title: "Payment successful",
-      description: "Your payment was successful, redirecting...",
-      variant: "default",
-    });
-
-    setTimeout(() => {
-      const searchParams = new URLSearchParams({
-        title: "Payment successful",
-        message: "Your payment was successful",
-        callbackUrl: `/user/my_bookings/flights/${flightBookingData.data._id}/ticket`,
-        callbackTitle: "Download ticket",
-      });
-      router.push(`/success?${searchParams.toString()}`);
-    }, 2000);
-  }
-
   return flightBookingError ? (
     <div className="flex h-full min-h-[300px] flex-col items-center justify-center gap-6 rounded-md border border-red-300 bg-red-50 p-6 shadow-sm">
       <div className="flex items-center gap-2 text-red-600">
@@ -96,9 +32,11 @@ export default function BookingPayment({ flightNumber, flightDateTimestamp }) {
       <p className="max-w-xl text-center text-sm text-red-700">
         {flightBookingError || "Something went wrong. Please try again."}
       </p>
-      <Button onClick={flightBookingRetry} variant="destructive">
-        Try Again
-      </Button>
+      {flightBookingError !== "Flight not reserved or got canceled" && (
+        <Button onClick={flightBookingRetry} variant="destructive">
+          Try Again
+        </Button>
+      )}
     </div>
   ) : (
     <>
@@ -126,15 +64,13 @@ export default function BookingPayment({ flightNumber, flightDateTimestamp }) {
           )}
         </div>
       </div>
-      <MakePaymentSection
-        onSuccess={onSuccess}
-        middleware={middleware}
-        loading={loading}
-        error={error}
-        retry={retry}
-        paymentIntents={data?.data?.paymentIntents}
-        paymentStatus={data?.data?.paymentStatus}
-      />
+      <div className="mb-[20px] rounded-[12px] bg-white p-[16px] shadow-md lg:mb-[30px] xl:mb-[40px]">
+        <p className="text-sm text-secondary">
+          Card payments are unavailable in this environment. Please contact our
+          travel desk to finalize the ticketing and arrange payment manually.
+        </p>
+      </div>
+      <MakePaymentSection className="w-full shadow-none" />
     </>
   );
 }

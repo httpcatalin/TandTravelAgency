@@ -1,6 +1,11 @@
 "use client";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import routes from "@/data/routes.json";
+
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=1170&auto=format&fit=crop";
 
 export default function PackageResultCard({ item, imageUrl }) {
   const hotel = item?.accommodation?.hotel || {};
@@ -14,9 +19,18 @@ export default function PackageResultCard({ item, imageUrl }) {
   const transfers = item?.transfers || {};
   const tourists = item?.tourists || {};
 
-  const firstImage =
-    imageUrl ||
-    "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=1170&auto=format&fit=crop";
+  const firstImage = imageUrl || FALLBACK_IMAGE;
+
+  const hotelInfoParams = new URLSearchParams({
+    name: hotel?.name || "",
+    city: hotel?.city || "",
+    category: hotel?.category || "",
+    price: price?.amount?.toString() || "",
+    currency: price?.currency || "",
+    image: firstImage || "",
+  }).toString();
+
+  const hotelDetailUrl = `${routes.hotels.path}/giata-${hotel?.id || hotel?.code || "unknown"}?${hotelInfoParams}`;
 
   return (
     <div className="flex h-min rounded-[8px] bg-white text-[0.75rem] font-medium text-secondary shadow-sm max-md:flex-col">
@@ -131,9 +145,9 @@ export default function PackageResultCard({ item, imageUrl }) {
 
         <div className="mt-3 flex items-center justify-end gap-2">
           <Button size="sm" variant="secondary" asChild>
-            <a href="#" target="_blank" rel="noreferrer">
-              Details
-            </a>
+            <Link href={hotelDetailUrl} target="_blank">
+              View Hotel Details
+            </Link>
           </Button>
         </div>
       </div>

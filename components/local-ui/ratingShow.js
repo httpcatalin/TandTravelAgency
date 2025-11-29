@@ -1,10 +1,11 @@
 import { Button } from "../ui/button";
 export function RatingShow({ rating }) {
+  const numRating = Number(rating);
+  const isValidRating = Number.isFinite(numRating) && numRating > 0;
+
   return (
     <Button variant="outline" size="sm" className="rounded-lg px-3 py-1">
-      {Number.isInteger(rating) && Math.floor(rating) > 0
-        ? rating.toFixed(1)
-        : "N/A"}
+      {isValidRating ? numRating.toFixed(1) : "N/A"}
     </Button>
   );
 }
